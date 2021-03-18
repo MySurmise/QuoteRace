@@ -8,6 +8,8 @@ from colorama import Style
 
 print(f'This is {Fore.GREEN}color{Style.RESET_ALL}!')   
 """
+# Website mit Farbcodes: https://pypi.org/project/colored/
+# Keyboard Listener: https://pynput.readthedocs.io/en/latest/keyboard.html#monitoring-the-keyboard
 
 from pynput import keyboard
 import os
