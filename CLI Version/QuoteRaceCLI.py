@@ -13,10 +13,9 @@ print(f'This is {Fore.GREEN}color{Style.RESET_ALL}!')
 
 from pynput import keyboard
 import os
-from colored import fg, bg, attr
-
-
-
+from colored import fg, bg, attr, style
+import json
+ 
 def terminal_width():
     try:
         size = os.get_terminal_size(1)
@@ -32,26 +31,68 @@ def terminal_width():
             return 145
 
 # Get Terminal Size.
-print("Getting Terminal Size... ", end="")
 width = int(terminal_width())
-print("found:", width)
+if width < 50:
+    print("Width of Terminal only", width, "characters. Must be at least 50. Exiting.")
+    exit()
+leftphrase = "    Terminal Size: " + str(width)
+rightphrase = "Exit with ESC    "
 
 
-print(" "*10 + "{0}".format(bg(1)) + " "*(width-2*10-1))
+
+print("\n" + leftphrase + " " * (width-len(leftphrase)-len(rightphrase)-1) + rightphrase + "\n")
+flag = []
+for n in range(0, int(width/2)):
+    flag.append("{0} ".format(bg(232)))
+    flag.append("{0} ".format(bg(231)))
+flag = "".join(flag)
+secflag = (" ".join(flag.split(" ")[1:]))
+
+print(secflag)
+print(flag)    
+print(secflag)
+
+
+print("{0}".format(bg(1)) + " "*10 + "{0}".format(bg(1)) + " "*(width-2*10-1 + 10))
 phrase = "QuoteRace CLI"
-print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*(width-2*10-1-6) + "{0}   ".format(bg(1)))
-print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*int((width-2*10-1-6-len(phrase))/2) + phrase + " "*int((width-2*10-6-len(phrase))/2) +  "{0}   ".format(bg(1)))
-print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*(width-2*10-1-6) + "{0}   ".format(bg(1)))
-print("{0}".format(bg(0))  + " "*10 + "{0}".format(bg(1)) + " "*(width-2*10-1) + "{0}".format(bg(0)))
-print("\n\n")
+print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*(width-2*10-1-6) + "{0}   ".format(bg(1)) + "{0}".format(bg(0)) + " "*11)
+print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*int((width-2*10-1-6-len(phrase))/2) + ("{0}{1}{2}" + phrase + "{3}").format(attr(1), attr(4), attr(5), attr(0)) + " "*int((width-2*10-6-len(phrase))/2) +  "{0}   ".format(bg(1)) + "{0}".format(bg(0)) + " "*10)
+print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*(width-2*10-1-6) + "{0}   ".format(bg(1)) + "{0}".format(bg(0)) + " "*10)
+print("{0}".format(bg(0))  + " "*10 + "{0}".format(bg(1)) + " "*(width-2*10-1) + "{0}".format(bg(0)) + " "*10 + style.RESET)
+
+
+print(secflag)
+print(flag)    
+print(secflag + style.RESET, end = "\n\n")
+
 phrase = "Type the following quote as fast as you can:"
 print(" "*int((width-len(phrase))/2) + phrase)
+
+
+# Opening Quotesfile
+
+with open("quotes.json", "r", encoding="utf-8") as f:
+    # Print all Quotes: quotes = json.dumps(json.loads(f.read()), indent=2)
+    # print(quotes)
+    print(json.load(f))
+
+# Go on here
+
+
+
+
 typed_string = []
+ctrl_pressed = False
+
 
 def on_press(key):
     global typed_string
+    global ctrl_pressed
     try:
         typed_string.append(key.char)
+        """if ctrl_pressed and key.char == "'\\x03'":
+            if input("Noticed CTRL + c. Exit? (y|n): ") == "y":
+                exit()"""
     except AttributeError:
         key = str(key)
         if key == "Key.backspace":
@@ -59,10 +100,17 @@ def on_press(key):
                 typed_string.pop()
             except:
                 pass
+            if ctrl_pressed:
+                try:
+                    typed_string = " ".join("".join(typed_string).split(" ")[:-1])
+                except:
+                    pass
         elif key == "Key.space":
             typed_string.append(" ")
         elif key == "Key.shift":
             pass
+        elif key == "Key.ctrl_l":
+            ctrl_pressed = True
         else:
             print("\r" + "".join(typed_string) + "\t\t\t\t" + key[4:] + "           \r" + "".join(typed_string) , end = " ")
     
@@ -70,16 +118,19 @@ def on_press(key):
 
 
 def on_release(key):
-    print('{0} released'.format(
-        key))
+    global ctrl_pressed
     if key == keyboard.Key.esc:
         # Stop listener
         listener.stop()
         return False
+    if key == keyboard.Key.ctrl_l:
+        ctrl_pressed = False
+
+    
 
 # Collect events until released
 with keyboard.Listener(
-        on_press=on_press) as listener:
+        on_press=on_press, on_release=on_release) as listener:
     listener.join()
 
 """# ...or, in a non-blocking fashion:
