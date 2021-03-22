@@ -15,7 +15,8 @@ from pynput import keyboard
 import os
 from colored import fg, bg, attr, style
 import json
- 
+import random
+
 def terminal_width():
     try:
         size = os.get_terminal_size(1)
@@ -65,8 +66,10 @@ print(secflag)
 print(flag)    
 print(secflag + style.RESET, end = "\n\n")
 
-phrase = "Type the following quote as fast as you can:"
-print(" "*int((width-len(phrase))/2) + phrase)
+def center_print(phrase): 
+    print(" "*int((width-len(phrase))/2) + phrase)
+
+center_print("Type the following quote as fast as you can:")
 
 
 # Opening Quotesfile
@@ -74,7 +77,17 @@ print(" "*int((width-len(phrase))/2) + phrase)
 with open("quotes.json", "r", encoding="utf-8") as f:
     # Print all Quotes: quotes = json.dumps(json.loads(f.read()), indent=2)
     # print(quotes)
-    print(json.load(f))
+    quotes = json.load(f)
+
+rand_quote = quotes[random.randint(0, len(quotes)-1)]
+line_length = int(width*0.7)
+line_number = int(len(rand_quote["quote"]) / line_length) + 1
+
+print(line_number)
+for n in range(0,line_number):
+    print(" " * int(0.2*width) + rand_quote["quote"][n*int(width*0.6):(n+1)*int(width*0.6)])
+print()
+
 
 # Go on here
 
