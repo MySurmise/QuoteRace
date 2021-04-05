@@ -40,8 +40,23 @@ leftphrase = "    Terminal Size: " + str(width)
 rightphrase = "Exit with ESC    "
 
 
+def colorprint(text, colorcode, repeat, linebreak):
+    #print("{0}".format(bg(colorcode)), end = "")
+    print((("{0}" + text).format(bg(colorcode))) * repeat, end = "")
+    print("{0}".format(bg(0)), end = "")
+    if linebreak:
+        print("")
+
+def centerline(percentage, colorcode):
+    global width
+    leng = int(width * percentage)
+    print(" " * int((width - leng)/2))
+    colorprint(" ", colorcode, leng, True)
+
 
 print("\n" + leftphrase + " " * (width-len(leftphrase)-len(rightphrase)-1) + rightphrase + "\n")
+
+# flag generator
 flag = []
 for n in range(0, int(width/2)):
     flag.append("{0} ".format(bg(232)))
@@ -54,12 +69,35 @@ print(flag)
 print(secflag)
 
 
-print("{0}".format(bg(1)) + " "*10 + "{0}".format(bg(1)) + " "*(width-2*10-1 + 10))
+colorprint(" ", 1, width, True)
+
+
+colorprint(" ", 0, 10, False)
+colorprint(" ", 1, 3, False)
+colorprint(" ", 0, width-26, False)
+colorprint(" ", 1, 3, False)
+colorprint(" ", 0, 10, True)
+
+
+colorprint(" ", 0, 10, False)
+colorprint(" ", 1, 3, False)
 phrase = "QuoteRace CLI"
-print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*(width-2*10-1-6) + "{0}   ".format(bg(1)) + "{0}".format(bg(0)) + " "*11)
-print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*int((width-2*10-1-6-len(phrase))/2) + ("{0}{1}{2}" + phrase + "{3}").format(attr(1), attr(4), attr(5), attr(0)) + " "*int((width-2*10-6-len(phrase))/2) +  "{0}   ".format(bg(1)) + "{0}".format(bg(0)) + " "*10)
-print("{0}".format(bg(0)) + " "*10 + "{0}   ".format(bg(1)) + "{0}".format(bg(0))  +  " "*(width-2*10-1-6) + "{0}   ".format(bg(1)) + "{0}".format(bg(0)) + " "*10)
-print("{0}".format(bg(0))  + " "*10 + "{0}".format(bg(1)) + " "*(width-2*10-1) + "{0}".format(bg(0)) + " "*10 + style.RESET)
+colorprint(" ", 0, int((width-2*10-1-6-len(phrase))/2), False)
+print(("{0}{1}{2}" + phrase + "{3}").format(attr(1), attr(4), attr(5), attr(0)), end = "")
+colorprint(" ", 0, int((width-2*10-3-len(phrase))/2), False)
+colorprint(" ", 1, 3, False)
+colorprint(" ", 0, 8, True)
+
+colorprint(" ", 0, 10, False)
+colorprint(" ", 1, 3, False)
+colorprint(" ", 0, width-26, False)
+colorprint(" ", 1, 3, False)
+colorprint(" ", 0, 10, True)
+
+
+colorprint(" ", 1, width, True)
+
+
 
 
 print(secflag)
@@ -75,18 +113,36 @@ center_print("Type the following quote as fast as you can:")
 # Opening Quotesfile
 
 with open("quotes.json", "r", encoding="utf-8") as f:
-    # Print all Quotes: quotes = json.dumps(json.loads(f.read()), indent=2)
+    # Print all Quotes: 
+    # quotes = json.dumps(json.loads(f.read()), indent=2)
     # print(quotes)
     quotes = json.load(f)
 
-rand_quote = quotes[random.randint(0, len(quotes)-1)]
-line_length = int(width*0.7)
+rand_quote = random.choice(quotes)
+line_length = int(width*0.6)
 line_number = int(len(rand_quote["quote"]) / line_length) + 1
+words = rand_quote["quote"].split(" ")
+count = 0
+line_index = 0
+lines = {}
+lines[0] = []
+for word in words:
+    count += len(word) + 1
+    lines[line_index].append(word)
+    if count >= line_length:
+        line_index += 1
+        count = 0
+        lines[line_index] = []
+    
 
-print(line_number)
-for n in range(0,line_number):
-    print(" " * int(0.2*width) + rand_quote["quote"][n*int(width*0.6):(n+1)*int(width*0.6)])
-print()
+print(line_number) 
+for line_index in range(0, len(lines)):
+    print("{0}".format(fg(random.randint(5,225))))
+    center_print(" ".join(lines[line_index]))
+print(" " * int(width/2 + width/10), "-",  rand_quote["author"])
+
+
+
 
 
 # Go on here
@@ -115,9 +171,12 @@ def on_press(key):
                 pass
             if ctrl_pressed:
                 try:
-                    typed_string = " ".join("".join(typed_string).split(" ")[:-1])
-                except:
-                    pass
+                    typed_string = list(" ".join("".join(typed_string).split(" ")[:-1]) )
+                    if len(typed_string) != 0:
+                        typed_string.append(" ")
+                    #print(typed_string)
+                except Exception as e:
+                    print(e)
         elif key == "Key.space":
             typed_string.append(" ")
         elif key == "Key.shift":
@@ -125,9 +184,9 @@ def on_press(key):
         elif key == "Key.ctrl_l":
             ctrl_pressed = True
         else:
-            print("\r" + "".join(typed_string) + "\t\t\t\t" + key[4:] + "           \r" + "".join(typed_string) , end = " ")
+            print("\r" + "".join(typed_string) + " " * (int(width/5 - len(typed_string)/2)) + key[4:] + "           \r" + "".join(typed_string) , end = " ")
     
-    print("\r" + "".join(typed_string) + "                " + "\r" + "".join(typed_string), end = " ") # +16 Spaces
+    print("\r" + "".join(typed_string) + " " * (int((width - len(typed_string))/2)) + "\r" + "".join(typed_string), end = " ") # +16 Spaces
 
 
 def on_release(key):
